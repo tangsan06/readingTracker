@@ -1,5 +1,6 @@
 package readingTracker.com.br.dao;
 
+import com.mysql.cj.x.protobuf.MysqlxDatatypes;
 import readingTracker.com.br.factory.ConnectionFactory;
 import readingTracker.com.br.model.*;
 import java.sql.PreparedStatement;
@@ -23,7 +24,6 @@ public class DaoLeitura implements Dao {
         }
 
         String comando = "insert into leitura(id_Leitor, id_Livro, statusLeitura, paginasLidas, dataterminoPlanejado) values (?,?,?,?,?)";
-
 
         try {
             PreparedStatement stmt = new ConnectionFactory().getConnection().prepareStatement(comando);
@@ -145,9 +145,21 @@ public class DaoLeitura implements Dao {
         return null;
     }
 
-    public List<LeituraModel> getListById(int id){
-        List<LeituraModel> lstLeitura = new ArrayList<LeituraModel>();
-        String comando = "select * from Leitura where id_leitor = ?";
+    public List<Object> getListById(int id){
+
+        List<Object> lstLeitura = new ArrayList<Object>();
+
+        StringBuilder st = new StringBuilder();
+
+        st.append("SELECT leitura.id, leitura.id_leitor, leitura.id_livro, leitura.statusLeitura, ");
+        st.append("leitura.paginasLidas, leitura.dataTerminoPlanejado, ");
+        st.append("livro.titulo, livro.quantidadePaginas ");
+        st.append("FROM leitura ");
+        st.append("INNER JOIN livro ");
+        st.append("ON leitura.id_livro = livro.id ");
+        st.append("WHERE id_leitor = ?");
+
+        String comando = st.toString();
 
         try{
             PreparedStatement stmt = new ConnectionFactory().getConnection().prepareStatement(comando);
@@ -160,9 +172,13 @@ public class DaoLeitura implements Dao {
                         rs.getInt("id_Livro"),
                         rs.getInt("statusLeitura"),
                         rs.getInt("paginasLidas"),
-                        rs.getString("dataterminoPlanejado")
+                        rs.getString("dataterminoPlanejado"),
+                        rs.getString("titulo"),
+                        rs.getInt("quantidadePaginas")
                 );
+
                 lstLeitura.add(oLeitura);
+
             }
 
             return lstLeitura;

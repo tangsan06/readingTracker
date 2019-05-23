@@ -1,25 +1,16 @@
 package readingTracker.com.br.controller;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import readingTracker.com.br.BLL.LeituraBLL;
-import readingTracker.com.br.BLL.LivroBLL;
-import readingTracker.com.br.BLL.PessoaBLL;
-import readingTracker.com.br.model.LeituraModel;
-import readingTracker.com.br.model.LivroModel;
-import readingTracker.com.br.model.PessoaModel;
+import readingTracker.com.br.model.*;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.servlet.http.HttpSession;
+
 
 public class LeituraController extends HttpServlet{
 
@@ -31,18 +22,15 @@ public class LeituraController extends HttpServlet{
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        //Variaveis uteis
         LeituraModel oLeitura = new LeituraModel();
         LeituraBLL oLeituraBLL = new LeituraBLL();
-        PessoaBLL oPessoaBLL= new PessoaBLL();
-        PessoaModel oPessoa = new PessoaModel();
-        String msg = "";
-
-        //Obter ação do usuario
-        String action = request.getParameter("action");
-
+        requestStatus oRequestStatus = new requestStatus(false);
+        String mensagem;
+        Gson gson = new Gson();
+        List<Object> obj = new ArrayList<>();
 
         //Busca dados do usuario pelo APID
+        /* Desativado nesta versao da API por Henrique Souza.
         try {
             HttpSession session = request.getSession();
             String APID = ((String) session.getAttribute("APID"));
@@ -50,18 +38,56 @@ public class LeituraController extends HttpServlet{
         }catch (Exception ex){
             Logger.getLogger(LeituraController.class.getName()).log(Level.SEVERE, null, ex);
         }
+        */
 
-        //Dados da leitura
-        oLeitura.setStatusLeitura(Integer.parseInt(request.getParameter("statusLeitura")));
-        oLeitura.setPaginasLidas(Integer.parseInt(request.getParameter("paginasLidas")));
-        oLeitura.setDataterminoPlanejado(request.getParameter("DataterminoPlanejado"));
 
+        //Obtem valores do request
+        String action = request.getParameter("action");
+        String idLeitura = request.getParameter("id");
+        String idLeitor =  request.getParameter("idLeitor");
+        String idLivro = request.getParameter("idLivro");
+        String statusLeitura = request.getParameter("statusLeitura");
+        String paginasLidas = request.getParameter("paginasLidas");
+        String dataTerminoPlanejado = request.getParameter("dataTerminoPlanejado");
+
+        //Obtem dados e popula objeto oLeituraModel
+        if(tryParseInt(idLeitura)){
+            oLeitura.setId(Integer.parseInt(idLeitura));
+        }else{
+            oLeitura.setId(0);
+        }
+
+        if(tryParseInt(idLeitor)){
+            oLeitura.setId_Leitor(Integer.parseInt(idLeitor));
+        }else{
+            oLeitura.setId_Leitor(0);
+        }
+
+        if(tryParseInt(idLivro)){
+            oLeitura.setId_Livro(Integer.parseInt(idLivro));
+        }
+
+        if(tryParseInt(statusLeitura)){
+            oLeitura.setStatusLeitura(Integer.parseInt(statusLeitura));
+        }else{
+            oLeitura.setStatusLeitura(0);
+        }
+
+        if(tryParseInt(paginasLidas)){
+            oLeitura.setPaginasLidas(Integer.parseInt(paginasLidas));
+        }else{
+            oLeitura.setPaginasLidas(0);
+        }
+
+        oLeitura.setDataterminoPlanejado(dataTerminoPlanejado);
 
         //CRUD de leitura de acordo com campo action informado
         if (action != null  && !action.isEmpty()) {
             switch (action) {
 
                 case "create": {
+
+                    /* Desativado nesta versão da API por Henrique Souza.
 
                     //Verificar se livro existe na base e insere (caso inexistente)
                     LivroBLL olivroBLL = new LivroBLL();
@@ -86,91 +112,94 @@ public class LeituraController extends HttpServlet{
                     } else {
                         //Setando ID do livro (caso exista na base)
                         oLeitura.setId_Livro(oLivro.getId());
-                    }
+                    }*/
 
                     //Inserção de nova leitura
-                    if (oLeituraBLL.verificaCampos(oLeitura)) {
-                        if (oLeituraBLL.novaLeitura(oLeitura)) {
-                            msg = "Leitura cadastrada com sucesso!";
-                        } else {
-                            msg = "Não foi possivel cadastrar esta leitura!";
-                        }
-                    } else {
-                        msg = "Dados invalidos ou nulo!";
+                    if (oLeituraBLL.novaLeitura(oLeitura)) {
+                        oRequestStatus.setRequestStatus(true);
                     }
 
-                    //Mensgaem de retorno json
-                    String json = new Gson().toJson(msg);
-                    response.setContentType("application/json");
-                    response.setCharacterEncoding("UTF-8");
-                    response.getWriter().write(json);
+                    obj.add(oRequestStatus);
                     break;
 
                 }
 
                 case "edit": {
 
+                    /* Desativado nesta versão da API por Henrique Souza.
                     //Caso edição de leitura: o ID do livro e Leitura é retornado da base e invisivel no dashboard
                     oLeitura.setId_Livro(Integer.parseInt(request.getParameter("id_Livro")));
-                    oLeitura.setId(Integer.parseInt(request.getParameter("id_Leitura")));
-
-                    if (oLeituraBLL.verificaCampos(oLeitura)) {
-                        if (oLeituraBLL.editarLeitura(oLeitura)) {
-                            msg = "Leitura editada com sucesso!";
-                        } else {
-                            msg = "Não foi possivel editar esta leitura!";
-                        }
-                    } else {
-                        msg = "Dados invalidos ou nulo!";
+                    oLeitura.setId(Integer.parseInt(request.getParameter("id_Leitura"))); */
+                    if (oLeituraBLL.editarLeitura(oLeitura)) {
+                        oRequestStatus.setRequestStatus(true);
                     }
 
-                    //Mensgaem de retorno json
-                    String json = new Gson().toJson(msg);
-                    response.setContentType("application/json");
-                    response.setCharacterEncoding("UTF-8");
-                    response.getWriter().write(json);
+                    obj.add(oRequestStatus);
                     break;
                 }
 
                 case "listar": {
-                    List<LeituraModel> lstLeitura = new ArrayList<LeituraModel>();
+                    List<LeituraModel> lstLeitura;
 
                     //Consulta de Leituras por ID do usuario
-                    lstLeitura = oLeituraBLL.listarLeituras(oLeitura.getId_Leitor());
+                    lstLeitura = oLeituraBLL.listarLeiturasPorLeitor(oLeitura.getId_Leitor());
 
-                    //Conversão da Lista para Json
-                    Gson gson = new Gson();
+                    if(lstLeitura == null || lstLeitura.isEmpty()){
+                        oRequestStatus.setRequestStatus(false);
+                    }else{
+                        oRequestStatus.setRequestStatus(true);
+                    }
 
-                    Type listOfLeituraObject = new TypeToken<List<LeituraModel>>(){}.getType();
+                    obj.add(oRequestStatus);
+                    obj.add(lstLeitura);
 
-                    String myJson = gson.toJson(lstLeitura,listOfLeituraObject);
-
-                    //Retorno de lista Json
-                    response.setContentType("application/json");
-                    response.setCharacterEncoding("utf-8");
-                    response.getWriter().write(myJson);
 
                     break;
                 }
 
-                case "obter": {
-                    //TODO o que fazer em case obter?
+                case "obterPorId": {
+
+                    //Obtem um objeto leitura
+                    oLeitura = oLeituraBLL.obterLeitura(oLeitura.getId());
+
+                    if(!oLeitura.equals(null)){
+                        oRequestStatus.setRequestStatus(true);
+                    }
+
+                    obj.add(oRequestStatus);
+                    obj.add(oLeitura);
+
                     break;
                 }
+
                 default:{
-                    msg = "Ação invalida!";
-                    response.setContentType("text/html");
-                    PrintWriter out = response.getWriter();
-                    out.println("falta açao!");
+                    mensagem = "Ação invalida!";
+                    obj.add(oRequestStatus);
+                    obj.add(mensagem);
                 }
 
             }
         }else{
-            response.setContentType("text/html");
-            PrintWriter out = response.getWriter();
-            out.println("falta açao!");
+            mensagem = "falta açao!";
+            obj.add(oRequestStatus);
+            obj.add(mensagem);
         }
 
+        //Serializa retorno e o envia
+        String myJson = gson.toJson(obj);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("utf-8");
+        response.getWriter().write(myJson);
+
+    }
+
+    private boolean tryParseInt(String value) {
+        try {
+            Integer.parseInt(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
 }
